@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>آزمایشگر شانس</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#f3f1fc;
+  --bg-grad:radial-gradient(circle at 15% 10%, rgba(99,102,241,.14), transparent 42%), radial-gradient(circle at 85% 20%, rgba(244,63,94,.10), transparent 40%);
+  --panel:#ffffff;
+  --panel-soft:#f8f7fe;
+  --ink:#181242;
+  --mute:#645e8a;
+  --line:#e2ddf6;
+  --acc:#f5b82e;
+  --fav:#0d9470;
+  --fav-soft:rgba(13,148,112,.12);
+  --pink:#e63a6e;
+  --pink-2:#f43f5e;
+  --oth:#c7c1e6;
+  --on:#ffffff;
+  --warn:#dc2626;
+  --shadow:0 12px 32px -12px rgba(24,18,66,.12), 0 2px 6px rgba(24,18,66,.04);
+  --radius:24px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c0922;
+    --bg-grad:radial-gradient(circle at 15% 10%, rgba(99,102,241,.22), transparent 45%), radial-gradient(circle at 85% 15%, rgba(244,63,94,.14), transparent 42%);
+    --panel:#161238;
+    --panel-soft:#1e194a;
+    --ink:#f1efff;
+    --mute:#a6a0d2;
+    --line:#2d2666;
+    --fav:#34d399;
+    --fav-soft:rgba(52,211,153,.14);
+    --oth:#433c84;
+    --on:#052e22;
+    --warn:#f87171;
+    --shadow:0 16px 36px -12px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c0922;
+  --bg-grad:radial-gradient(circle at 15% 10%, rgba(99,102,241,.22), transparent 45%), radial-gradient(circle at 85% 15%, rgba(244,63,94,.14), transparent 42%);
+  --panel:#161238;
+  --panel-soft:#1e194a;
+  --ink:#f1efff;
+  --mute:#a6a0d2;
+  --line:#2d2666;
+  --fav:#34d399;
+  --fav-soft:rgba(52,211,153,.14);
+  --oth:#433c84;
+  --on:#052e22;
+  --warn:#f87171;
+  --shadow:0 16px 36px -12px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--bg);
+  background-image:var(--bg-grad);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:"Vazirmatn",Tahoma,sans-serif;
+  line-height:1.75;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  overflow-x:hidden;
+}
+
+main{
+  max-width:960px;
+  margin:0 auto;
+  padding:24px 16px 56px;
+}
+
+/* Header */
+.topbar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+}
+.brand h1{
+  font-size:clamp(28px,6vw,46px);
+  font-weight:800;
+  margin:0;
+  line-height:1.2;
+  letter-spacing:-0.5px;
+}
+.sub{
+  color:var(--mute);
+  margin:6px 0 0;
+  font-size:clamp(14px,2.2vw,16px);
+  max-width:54ch;
+}
+.theme-btn{
+  flex-shrink:0;
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink);
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, border-color .15s ease;
+}
+.theme-btn:hover{transform:translateY(-1px);border-color:var(--mute)}
+
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{
+  outline:3px solid var(--acc);
+  outline-offset:3px;
+}
+
+/* Mode Switcher */
+.tiles{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:6px;
+  box-shadow:var(--shadow);
+  margin-bottom:18px;
+}
+.tiles button{
+  background:transparent;
+  border:0;
+  border-radius:15px;
+  padding:10px 8px;
+  font-weight:700;
+  font-size:clamp(14px,2.4vw,16px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  color:var(--mute);
+  transition:all .2s ease;
+}
+.tiles button span{font-size:22px;line-height:1}
+.tiles button:hover:not([aria-pressed="true"]){
+  color:var(--ink);
+  background:var(--panel-soft);
+}
+.tiles button[aria-pressed="true"]{
+  background:var(--ink);
+  color:var(--bg);
+  box-shadow:0 4px 14px rgba(24,18,66,.18);
+}
+
+@media(prefers-reduced-motion:no-preference){
+  .fill{transition:width .5s cubic-bezier(.22,1,.36,1)}
+}
+
+/* Panels */
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow:var(--shadow);
+}
+.ctl-panel{
+  margin-bottom:18px;
+}
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+.lbl{
+  display:block;
+  font-weight:700;
+  font-size:14px;
+  margin:0 0 8px;
+  color:var(--ink);
+}
+input[type=text]{
+  width:100%;
+  padding:11px 14px;
+  border:2px solid var(--line);
+  border-radius:14px;
+  background:var(--panel-soft);
+  font-weight:600;
+  transition:border-color .15s ease, background .15s ease;
+}
+input[type=text]:focus{
+  border-color:var(--fav);
+  background:var(--panel);
+  outline:none;
+}
+.chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.chips button{
+  min-width:44px;
+  padding:5px 14px;
+  border-radius:999px;
+  border:1.5px solid var(--line);
+  background:var(--panel-soft);
+  font-size:13px;
+  font-weight:600;
+  transition:all .15s ease;
+}
+.chips button:hover{
+  border-color:var(--fav);
+}
+.chips button[aria-pressed="true"],
+.chips button.active{
+  background:var(--fav);
+  border-color:var(--fav);
+  color:var(--on);
+  font-weight:700;
+}
+.hint{
+  font-size:13px;
+  color:var(--fav);
+  font-weight:600;
+  margin-top:8px;
+}
+
+.btns{
+  display:flex;
+  gap:10px;
+  margin-top:6px;
+}
+.go{
+  flex:1;
+  font-weight:800;
+  font-size:17px;
+  padding:14px 20px;
+  border:0;
+  border-radius:16px;
+  background:linear-gradient(135deg,var(--pink),var(--pink-2));
+  color:#fff;
+  box-shadow:0 8px 20px -6px rgba(230,58,110,.5);
+  transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.go:hover:not(:disabled){
+  transform:translateY(-1px);
+  box-shadow:0 12px 24px -6px rgba(230,58,110,.6);
+}
+.go:active:not(:disabled){transform:translateY(0)}
+.go:disabled{opacity:.55;cursor:default;box-shadow:none}
+.stop{
+  padding:14px 22px;
+  border-radius:16px;
+  border:2px solid var(--ink);
+  background:transparent;
+  font-weight:700;
+}
+.stop[hidden]{display:none}
+
+.pg{
+  height:10px;
+  border-radius:99px;
+  background:var(--panel-soft);
+  border:1px solid var(--line);
+  overflow:hidden;
+  margin-top:14px;
+}
+.pg i{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,var(--acc),var(--fav));
+  transition:width .1s linear;
+}
+.err{
+  color:var(--warn);
+  font-size:13px;
+  font-weight:600;
+  min-height:1.6em;
+  margin:8px 0 0;
+}
+.err:empty{display:none}
+
+/* Results */
+.res-panel{margin-top:4px}
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:22px;
+}
+@media (max-width:600px){
+  .kpis{grid-template-columns:1fr}
+}
+.kpi{
+  background:var(--panel-soft);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px 16px;
+}
+.kpi.primary{
+  background:var(--fav-soft);
+  border-color:rgba(13,148,112,.3);
+}
+.kpi-lbl{
+  font-size:12px;
+  font-weight:600;
+  color:var(--mute);
+  margin-bottom:4px;
+}
+.kpi-val{
+  font-size:clamp(26px,5vw,38px);
+  font-weight:800;
+  line-height:1.15;
+  color:var(--ink);
+}
+.kpi.primary .kpi-val{color:var(--fav)}
+.kpi-sub{
+  font-size:12px;
+  color:var(--mute);
+  margin-top:4px;
+}
+.line{
+  margin:0 0 18px;
+  color:var(--mute);
+  font-size:14px;
+  background:var(--panel-soft);
+  border-radius:12px;
+  padding:10px 14px;
+}
+.section-title{
+  font-size:16px;
+  font-weight:800;
+  margin:24px 0 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.chart-box{
+  background:var(--panel-soft);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px 12px 10px;
+}
+svg{width:100%;height:auto;display:block;direction:ltr}
+.ax{fill:var(--mute);font-size:11px;font-family:inherit}
+
+.bars-wrap{
+  background:var(--panel-soft);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px 16px;
+}
+.row{
+  display:grid;
+  grid-template-columns:52px 1fr 78px;
+  gap:10px;
+  align-items:center;
+  margin:8px 0;
+  font-size:13px;
+  font-weight:600;
+}
+.row span:last-child{text-align:left;direction:ltr;font-variant-numeric:tabular-nums}
+.track{
+  position:relative;
+  height:20px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:99px;
+}
+.fill{
+  position:absolute;
+  inset-block:0;
+  inset-inline-start:0;
+  border-radius:99px;
+  background:var(--oth);
+}
+.fill.f{background:var(--fav)}
+.mark{
+  position:absolute;
+  inset-block:-4px;
+  width:3px;
+  border-radius:2px;
+  background:var(--ink);
+  z-index:2;
+}
+.seq{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+.seq span{
+  padding:3px 11px;
+  border-radius:999px;
+  background:var(--panel-soft);
+  border:1px solid var(--line);
+  font-size:13px;
+  font-weight:600;
+}
+.seq span.f{
+  background:var(--fav);
+  border-color:var(--fav);
+  color:var(--on);
+}
+.legend{
+  font-size:12px;
+  color:var(--mute);
+  margin-top:8px;
+}
+.site-footer{
+  display:flex;
+  justify-content:center;
+  margin-top:34px;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+  direction:ltr;
+}
+.dev-badge{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 22px;
+  border-radius:999px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow), 0 0 24px -6px rgba(230,58,110,.22);
+  font-size:13px;
+  letter-spacing:.3px;
+  color:var(--mute);
+  transition:transform .25s ease, box-shadow .25s ease;
+  overflow:hidden;
+}
+.dev-badge::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  padding:1.5px;
+  border-radius:999px;
+  background:linear-gradient(110deg, var(--fav), var(--acc), var(--pink), var(--fav));
+  background-size:220% 100%;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+}
+.dev-badge:hover{
+  transform:translateY(-2px);
+  box-shadow:var(--shadow), 0 8px 28px -6px rgba(230,58,110,.32);
+}
+.dev-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:linear-gradient(135deg, var(--fav), var(--acc));
+  box-shadow:0 0 10px var(--fav);
+  flex-shrink:0;
+}
+.dev-name{
+  font-weight:800;
+  font-size:14px;
+  background:linear-gradient(90deg, var(--pink), var(--acc), var(--fav));
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+@media(prefers-reduced-motion:no-preference){
+  .dev-badge::before,
+  .dev-name{
+    animation:dev-flow 6s linear infinite;
+  }
+  .dev-dot{
+    animation:dev-pulse 2.2s ease-in-out infinite;
+  }
+}
+@keyframes dev-flow{
+  to{background-position:200% center}
+}
+@keyframes dev-pulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.35);opacity:.7}
+}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<main>
+  <header class="topbar">
+    <div class="brand">
+      <h1>آزمایشگر شانس</h1>
+      <p class="sub">سکه، تاس یا هر حالت سفارشی را تا ۱۰۰ میلیون بار امتحان کن و همگرایی به احتمال نظری را ببین.</p>
+    </div>
+    <button type="button" class="theme-btn" id="themeBtn" aria-label="تغییر تم روشن و تاریک" title="تغییر تم">🌓</button>
+  </header>
+
+  <div class="tiles" id="modes" role="tablist" aria-label="انتخاب ابزار آزمایش">
+    <button type="button" data-m="coin" aria-pressed="true"><span>🪙</span>سکه</button>
+    <button type="button" data-m="dice" aria-pressed="false"><span>🎲</span>تاس</button>
+    <button type="button" data-m="custom" aria-pressed="false"><span>🎯</span>سفارشی</button>
+  </div>
+
+  <section class="panel ctl-panel">
+      <div id="ctl">
+        <div id="customBlock" hidden>
+          <div class="field">
+            <label class="lbl" for="n">تعداد کل حالت‌ها</label>
+            <input type="text" id="n" value="10" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label class="lbl">حالت مطلوب</label>
+            <div class="chips" id="chips"></div>
+            <input type="text" id="fav" value="1" inputmode="text" autocomplete="off" aria-label="حالت‌های مطلوب" style="margin-top:8px">
+            <div class="hint" id="hint"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="lbl" for="t">تعداد دفعات آزمایش (حداکثر ۱۰۰ میلیون)</label>
+          <input type="text" id="t" value="۱٬۰۰۰" inputmode="numeric">
+          <div class="chips" id="pre" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button type="button" class="go" id="go">اجرای آزمایش</button>
+        <button type="button" class="stop" id="stop" hidden>توقف</button>
+      </div>
+      <div class="pg" id="pg" hidden><i id="pgi"></i></div>
+      <p class="err" id="err" role="alert"></p>
+    </section>
+
+  <section class="panel res-panel" id="res" hidden>
+    <div class="kpis">
+      <div class="kpi primary">
+        <div class="kpi-lbl" id="k1Lbl">درصد مشاهده‌شده</div>
+        <div class="kpi-val" id="pct"></div>
+        <div class="kpi-sub" id="l1"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">احتمال نظری</div>
+        <div class="kpi-val" id="theoPct"></div>
+        <div class="kpi-sub" id="theoSub"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">اختلاف از احتمال نظری</div>
+        <div class="kpi-val" id="diffVal" dir="ltr" style="text-align:right"></div>
+        <div class="kpi-sub" id="diffSub"></div>
+      </div>
+    </div>
+
+    <p class="line" id="l3"></p>
+
+    <h2 class="section-title">نزدیک شدن به احتمال نظری</h2>
+    <div class="chart-box" id="chart"></div>
+
+    <h2 class="section-title">سهم هر حالت</h2>
+    <div class="bars-wrap">
+      <div id="bars"></div>
+      <div class="legend" id="leg"></div>
+    </div>
+
+    <h2 class="section-title">نتیجه‌ی چند آزمایش اول</h2>
+    <div class="seq" id="seq"></div>
+  </section>
+
+  <footer class="site-footer"><div class="dev-badge"><span class="dev-dot" aria-hidden="true"></span><span>developer by <strong class="dev-name">Seyyed Yoones Razavi</strong></span></div></footer>
+</main>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var fa=function(n){return n.toLocaleString('fa-IR')};
+var nf=new Intl.NumberFormat('fa-IR',{maximumFractionDigits:2,minimumFractionDigits:2});
+var pc=function(x){return nf.format(x)+'٪'};
+var MAXT=100000000,RANGE=4294967296,mode='coin',fav=new Set([1]),S=null;
+
+/* Theme toggle */
+var themeBtn=$('themeBtn');
+function applyTheme(t){
+  if(t==='dark'||t==='light'){
+    document.documentElement.setAttribute('data-theme',t);
+    themeBtn.textContent=t==='dark'?'☀️':'🌙';
+  }else{
+    document.documentElement.removeAttribute('data-theme');
+    themeBtn.textContent='🌓';
+  }
+}
+try{applyTheme(localStorage.getItem('chance_theme')||'')}catch(e){}
+themeBtn.onclick=function(){
+  var cur=document.documentElement.getAttribute('data-theme');
+  var isDarkNow=cur==='dark'||(!cur&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+  var next=isDarkNow?'light':'dark';
+  applyTheme(next);
+  try{localStorage.setItem('chance_theme',next)}catch(e){}
+};
+
+function norm(s){return s.replace(/[۰-۹]/g,function(d){return d.charCodeAt(0)-1776}).replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632})}
+function N(){return mode==='coin'?2:mode==='dice'?6:(Math.floor(+norm($('n').value.replace(/[٬,،\s]/g,'')))||0)}
+function lab(i){return mode==='coin'?(i===1?'شیر':'خط'):fa(i)}
+
+function parseFav(txt,n){
+  var out=new Set();
+  norm(txt).split(/[,،\s]+/).forEach(function(p){
+    if(!p)return;
+    var m=p.match(/^(\d+)[-–](\d+)$/);
+    if(m){var a=+m[1],b=+m[2],t;if(a>b){t=a;a=b;b=t}for(var i=Math.max(a,1);i<=Math.min(b,n);i++)out.add(i)}
+    else if(/^\d+$/.test(p)&&+p>=1&&+p<=n)out.add(+p);
+  });
+  return out;
+}
+
+function hint(){
+  var n=N();
+  $('hint').textContent=n>=2?('احتمال نظری: '+fa(fav.size)+' از '+fa(n)+' = '+pc(fav.size/n*100)):'';
+}
+
+function writeText(){$('fav').value=Array.from(fav).sort(function(a,b){return a-b}).join('، ')}
+
+function chips(){
+  var n=N(),box=$('chips');box.innerHTML='';
+  if(mode!=='custom'||n<2||n>36)return;
+  for(var i=1;i<=n;i++){(function(i){
+    var b=document.createElement('button');b.type='button';b.textContent=lab(i);
+    b.setAttribute('aria-pressed',fav.has(i));
+    b.onclick=function(){fav.has(i)?fav.delete(i):fav.add(i);writeText();chips();hint()};
+    box.appendChild(b)})(i)}
+}
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('#modes button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.m===m)});
+  fav=new Set(m==='dice'?[6]:[1]);
+  $('customBlock').hidden=m!=='custom';
+  $('err').textContent='';
+  writeText();chips();hint();
+}
+document.querySelectorAll('#modes button').forEach(function(b){b.onclick=function(){setMode(b.dataset.m)}});
+$('n').oninput=function(){var n=N();fav=new Set(Array.from(fav).filter(function(x){return x<=n}));writeText();chips();hint()};
+$('fav').oninput=function(){fav=parseFav($('fav').value,N());chips();hint()};
+
+var presetDefs=[[100,'۱۰۰'],[1000,'۱٬۰۰۰'],[10000,'۱۰ هزار'],[1e6,'۱ میلیون'],[1e7,'۱۰ میلیون'],[1e8,'۱۰۰ میلیون']];
+function syncPresetActive(){
+  var cur=Math.floor(+norm($('t').value).replace(/[٬,،\s]/g,'')||0);
+  var btns=$('pre').querySelectorAll('button');
+  presetDefs.forEach(function(p,idx){
+    if(btns[idx])btns[idx].classList.toggle('active',cur===p[0]);
+  });
+}
+presetDefs.forEach(function(p){
+  var b=document.createElement('button');b.type='button';b.textContent=p[1];
+  b.onclick=function(){$('t').value=fa(p[0]);syncPresetActive()};
+  $('pre').appendChild(b);
+});
+$('t').oninput=syncPresetActive;
+syncPresetActive();
+
+
+
+/* هسته‌ی تصادفی: Web Crypto + نمونه‌گیری ردی */
+function start(){
+  var err=$('err'),n=N(),t=Math.floor(+norm($('t').value).replace(/[٬,،\s]/g,'')||0);
+  err.textContent='';
+  if(!(n>=2&&n<=1000000)){err.textContent='تعداد حالت‌ها باید بین ۲ تا ۱٬۰۰۰٬۰۰۰ باشد.';return}
+  if(!(t>=1)){err.textContent='تعداد دفعات را وارد کن.';return}
+  if(t>MAXT){t=MAXT;$('t').value=fa(t);syncPresetActive();err.textContent='حداکثر ۱۰۰ میلیون است؛ روی همین مقدار تنظیم شد.'}
+  if(!fav.size){err.textContent='حداقل یک حالت مطلوب انتخاب کن.';return}
+  var m=n,k=1,mask=new Uint8Array(n),cps=[],i,v;
+  while(m*n<=RANGE){m*=n;k++}
+  fav.forEach(function(x){mask[x-1]=1});
+  for(i=1;i<=160;i++){v=Math.round(Math.pow(t,i/160));if(!cps.length||v>cps[cps.length-1])cps.push(v)}
+  S={n:n,t:t,k:k,m:m,lim:RANGE-RANGE%m,mask:mask,counts:new Uint32Array(n),hits:0,done:0,first:[],last:null,cps:cps,ci:0,cp:[],t0:performance.now(),running:true,buf:new Uint32Array(16384)};
+  $('go').disabled=true;$('stop').hidden=false;$('pg').hidden=false;$('pgi').style.width='0';
+  $('ctl').inert=$('modes').inert=true;
+  step();
+}
+function step(){
+  if(!S||!S.running)return;
+  var s=S,buf=s.buf,counts=s.counts,mask=s.mask,n=s.n,k=s.k,lim=s.lim,m=s.m,t=s.t,cps=s.cps,t0=performance.now(),j,q,d,v,r,done=s.done,hits=s.hits,ci=s.ci,last=s.last;
+  do{
+    crypto.getRandomValues(buf);
+    for(j=0;j<16384&&done<t;j++){
+      v=buf[j];if(v>=lim)continue;
+      v=v%m;d=Math.min(k,t-done);
+      for(q=0;q<d;q++){
+        r=v%n;v=(v-r)/n;counts[r]++;hits+=mask[r];done++;
+        if(done<=40)s.first.push(r+1);
+        if(done===cps[ci]){s.cp.push([done,hits]);ci++}
+      }
+      last=r+1;
+    }
+  }while(done<t&&performance.now()-t0<30);
+  s.done=done;s.hits=hits;s.ci=ci;s.last=last;
+  $('pgi').style.width=(done/t*100)+'%';
+  if(done<t)setTimeout(step,0);else finish();
+}
+function finish(){
+  var s=S;s.running=false;s.ms=performance.now()-s.t0;
+  $('go').disabled=false;$('stop').hidden=true;$('pg').hidden=true;
+  $('ctl').inert=$('modes').inert=false;
+  if(!s.done){return}
+  render(s);
+}
+$('go').onclick=start;
+$('stop').onclick=function(){if(S&&S.running)finish()};
+
+function chart(s,p){
+  var W=640,H=230,L=56,R=14,T=14,B=30,tot=s.done,pts=s.cp.map(function(c){return[c[0],c[1]/c[0]*100]}),d=0,mx=Math.log10(tot);
+  if(pts.length<2||mx<=0)return '';
+  pts.forEach(function(q){if(q[0]>=Math.min(30,tot))d=Math.max(d,Math.abs(q[1]-p))});
+  d=Math.max(d*1.2,.2);
+  var lo=Math.max(0,p-d),hi=Math.min(100,p+d);
+  var X=function(x){return L+Math.log10(x)/mx*(W-L-R)};
+  var Y=function(y){return T+(1-(Math.min(hi,Math.max(lo,y))-lo)/(hi-lo))*(H-T-B)};
+  var g='',k;
+  for(k=0;k<=Math.floor(mx);k++)g+='<text class="ax" x="'+X(Math.pow(10,k)).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+fa(Math.pow(10,k))+'</text>';
+  [hi,p,lo].forEach(function(y){g+='<text class="ax" x="'+(L-8)+'" y="'+(Y(y)+4).toFixed(1)+'" text-anchor="end">'+pc(y)+'</text><line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(y).toFixed(1)+'" y2="'+Y(y).toFixed(1)+'" style="stroke:var(--line)"/>'});
+  g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(p).toFixed(1)+'" y2="'+Y(p).toFixed(1)+'" stroke-dasharray="5 4" stroke-width="2" style="stroke:var(--ink)"/>';
+  g+='<path fill="none" stroke-width="3" stroke-linejoin="round" style="stroke:var(--fav)" d="M'+pts.map(function(q){return X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)}).join('L')+'"/>';
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="نمودار نزدیک شدن درصد به احتمال نظری">'+g+'</svg><div class="legend">محور افقی: تعداد آزمایش‌ها (مقیاس لگاریتمی). خط‌چین: احتمال نظری. خط رنگی: درصد مشاهده‌شده.</div>';
+}
+
+function render(s){
+  var n=s.n,t=s.done,p=fav.size/n*100,obs=s.hits/t*100,diff=obs-p,sd=Math.sqrt(p/100*(1-p/100)/t)*100,k;
+  var targetName=mode==='coin'?'شیر':mode==='dice'?'عدد ۶':'حالت مطلوب';
+  $('res').hidden=false;
+  $('k1Lbl').textContent='درصد مشاهده‌شده ('+targetName+')';
+  $('pct').textContent=pc(obs);
+  $('l1').textContent=fa(s.hits)+' بار از '+fa(t)+' آزمایش';
+  $('theoPct').textContent=pc(p);
+  $('theoSub').textContent=fa(fav.size)+' حالت از '+fa(n)+' حالت';
+  $('diffVal').textContent=(diff>=0?'+':'−')+nf.format(Math.abs(diff))+'٪';
+  $('diffSub').textContent='واحد درصد اختلاف';
+  $('l3').textContent='با این تعداد آزمایش، اختلاف تا حدود ±'+nf.format(2*sd)+' واحد درصد کاملاً طبیعی است. زمان اجرا: '+(s.ms/1000).toLocaleString('fa-IR',{maximumFractionDigits:1})+' ثانیه.';
+  $('chart').innerHTML=chart(s,p);
+
+  var bars=$('bars');bars.innerHTML='';
+  function row(a,w,f,txt,mk){
+    var r=document.createElement('div');
+    r.className='row';
+    r.innerHTML='<span>'+a+'</span><div class="track"><div class="fill'+(f?' f':'')+'" style="width:'+w+'%"></div>'+(mk==null?'':'<div class="mark" style="inset-inline-start:calc('+mk+'% - 1px)"></div>')+'</div><span>'+txt+'</span>';
+    bars.appendChild(r);
+  }
+  if(n<=36){
+    var mxf=1/n;for(k=0;k<n;k++)mxf=Math.max(mxf,s.counts[k]/t);
+    for(k=0;k<n;k++)row(lab(k+1),s.counts[k]/t/mxf*100,fav.has(k+1),pc(s.counts[k]/t*100),1/n/mxf*100);
+    $('leg').textContent='خط عمودی سهم نظری هر حالت است و حالت شاخص رنگی است.';
+  }else{
+    var rest=t-s.hits,mm=Math.max(s.hits,rest,1);
+    row('مطلوب',s.hits/mm*100,true,pc(obs),null);row('غیر مطلوب',rest/mm*100,false,pc(100-obs),null);
+    $('leg').textContent='';
+  }
+
+  var q=$('seq');q.innerHTML='';
+  s.first.forEach(function(v){var e=document.createElement('span');e.textContent=lab(v);if(fav.has(v))e.className='f';q.appendChild(e)});
+  $('res').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+setMode('coin');
+})();
+</script>
+</body>
+</html>
