@@ -234,6 +234,7 @@ input[type=text]:focus{
 
 .btns{
   display:flex;
+  flex-wrap:wrap;
   gap:10px;
   margin-top:6px;
 }
@@ -360,12 +361,18 @@ svg{width:100%;height:auto;display:block;direction:ltr}
 }
 .row{
   display:grid;
-  grid-template-columns:52px 1fr 78px;
-  gap:10px;
+  grid-template-columns:46px 1fr 72px;
+  gap:8px;
   align-items:center;
   margin:8px 0;
   font-size:13px;
   font-weight:600;
+}
+@media (max-width:400px){
+  .tiles{gap:6px;padding:5px}
+  .tiles button{gap:5px;padding:9px 4px;font-size:13px}
+  .tiles button span{font-size:18px}
+  .panel{padding:16px}
 }
 .row span:last-child{text-align:left;direction:ltr;font-variant-numeric:tabular-nums}
 .track{
@@ -426,9 +433,13 @@ svg{width:100%;height:auto;display:block;direction:ltr}
 .dev-badge{
   position:relative;
   display:inline-flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  text-align:center;
+  max-width:100%;
   align-items:center;
-  gap:10px;
-  padding:10px 22px;
+  gap:8px 10px;
+  padding:10px 20px;
   border-radius:999px;
   background:var(--panel);
   border:1px solid var(--line);
@@ -559,8 +570,10 @@ svg{width:100%;height:auto;display:block;direction:ltr}
 
     <p class="line" id="l3"></p>
 
-    <h2 class="section-title">نزدیک شدن به احتمال نظری</h2>
-    <div class="chart-box" id="chart"></div>
+    <div id="chartWrap">
+      <h2 class="section-title">نزدیک شدن به احتمال نظری</h2>
+      <div class="chart-box" id="chart"></div>
+    </div>
 
     <h2 class="section-title">سهم هر حالت</h2>
     <div class="bars-wrap">
@@ -580,8 +593,11 @@ svg{width:100%;height:auto;display:block;direction:ltr}
 var $=function(i){return document.getElementById(i)};
 var fa=function(n){return n.toLocaleString('fa-IR')};
 var nf=new Intl.NumberFormat('fa-IR',{maximumFractionDigits:2,minimumFractionDigits:2});
-var pc=function(x){return nf.format(x)+'٪'};
-var MAXT=100000000,RANGE=4294967296,mode='coin',fav=new Set([1]),S=null;
+var nf4=new Intl.NumberFormat('fa-IR',{maximumFractionDigits:4,minimumFractionDigits:2});
+var nfCount=new Intl.NumberFormat('fa-IR',{maximumFractionDigits:1});
+var fmtNum=function(x){var ax=Math.abs(x);return (ax>0&&ax<0.1)?nf4.format(x):nf.format(x)};
+var pc=function(x){return fmtNum(x)+'٪'};
+var MAXT=100000000,RANGE=4294967296,mode='coin',fav=new Set([1]),S=null,timerId=null;
 
 /* Theme toggle */
 var themeBtn=$('themeBtn');
@@ -700,9 +716,10 @@ function step(){
   }while(done<t&&performance.now()-t0<30);
   s.done=done;s.hits=hits;s.ci=ci;s.last=last;
   $('pgi').style.width=(done/t*100)+'%';
-  if(done<t)setTimeout(step,0);else finish();
+  if(done<t)timerId=setTimeout(step,0);else finish();
 }
 function finish(){
+  if(timerId){clearTimeout(timerId);timerId=null}
   var s=S;s.running=false;s.ms=performance.now()-s.t0;
   $('go').disabled=false;$('stop').hidden=true;$('pg').hidden=true;
   $('ctl').inert=$('modes').inert=false;
@@ -713,16 +730,18 @@ $('go').onclick=start;
 $('stop').onclick=function(){if(S&&S.running)finish()};
 
 function chart(s,p){
-  var W=640,H=230,L=56,R=14,T=14,B=30,tot=s.done,pts=s.cp.map(function(c){return[c[0],c[1]/c[0]*100]}),d=0,mx=Math.log10(tot);
+  var W=640,H=230,L=64,R=38,T=16,B=30,tot=s.done,pts=s.cp.map(function(c){return[c[0],c[1]/c[0]*100]}),d=0,mx=Math.log10(tot);
   if(pts.length<2||mx<=0)return '';
   pts.forEach(function(q){if(q[0]>=Math.min(30,tot))d=Math.max(d,Math.abs(q[1]-p))});
   d=Math.max(d*1.2,.2);
   var lo=Math.max(0,p-d),hi=Math.min(100,p+d);
   var X=function(x){return L+Math.log10(x)/mx*(W-L-R)};
   var Y=function(y){return T+(1-(Math.min(hi,Math.max(lo,y))-lo)/(hi-lo))*(H-T-B)};
-  var g='',k;
+  var g='',k,ticks=[hi];
+  if(Math.abs(p-hi)>0.05&&Math.abs(p-lo)>0.05)ticks.push(p);
+  if(Math.abs(lo-hi)>0.05)ticks.push(lo);
   for(k=0;k<=Math.floor(mx);k++)g+='<text class="ax" x="'+X(Math.pow(10,k)).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+fa(Math.pow(10,k))+'</text>';
-  [hi,p,lo].forEach(function(y){g+='<text class="ax" x="'+(L-8)+'" y="'+(Y(y)+4).toFixed(1)+'" text-anchor="end">'+pc(y)+'</text><line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(y).toFixed(1)+'" y2="'+Y(y).toFixed(1)+'" style="stroke:var(--line)"/>'});
+  ticks.forEach(function(y){g+='<text class="ax" x="'+(L-8)+'" y="'+(Y(y)+4).toFixed(1)+'" text-anchor="end">'+pc(y)+'</text><line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(y).toFixed(1)+'" y2="'+Y(y).toFixed(1)+'" style="stroke:var(--line)"/>'});
   g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(p).toFixed(1)+'" y2="'+Y(p).toFixed(1)+'" stroke-dasharray="5 4" stroke-width="2" style="stroke:var(--ink)"/>';
   g+='<path fill="none" stroke-width="3" stroke-linejoin="round" style="stroke:var(--fav)" d="M'+pts.map(function(q){return X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)}).join('L')+'"/>';
   return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="نمودار نزدیک شدن درصد به احتمال نظری">'+g+'</svg><div class="legend">محور افقی: تعداد آزمایش‌ها (مقیاس لگاریتمی). خط‌چین: احتمال نظری. خط رنگی: درصد مشاهده‌شده.</div>';
@@ -737,10 +756,11 @@ function render(s){
   $('l1').textContent=fa(s.hits)+' بار از '+fa(t)+' آزمایش';
   $('theoPct').textContent=pc(p);
   $('theoSub').textContent=fa(fav.size)+' حالت از '+fa(n)+' حالت';
-  $('diffVal').textContent=(diff>=0?'+':'−')+nf.format(Math.abs(diff))+'٪';
-  $('diffSub').textContent='واحد درصد اختلاف';
-  $('l3').textContent='با این تعداد آزمایش، اختلاف تا حدود ±'+nf.format(2*sd)+' واحد درصد کاملاً طبیعی است. زمان اجرا: '+(s.ms/1000).toLocaleString('fa-IR',{maximumFractionDigits:1})+' ثانیه.';
-  $('chart').innerHTML=chart(s,p);
+  $('diffVal').textContent=(diff===0?'':(diff>0?'+':'−'))+fmtNum(Math.abs(diff))+'٪';
+  var diffCount=s.hits-(t*fav.size/n);
+  $('diffSub').textContent=Math.abs(diffCount)<1e-9?'دقیقاً برابر انتظار (۰ بار اختلاف)':(nfCount.format(Math.abs(diffCount))+' بار '+(diffCount>0?'بیشتر':'کمتر')+' از انتظار نظری');
+  $('l3').textContent='با این تعداد آزمایش، اختلاف تا حدود ±'+fmtNum(2*sd)+' واحد درصد کاملاً طبیعی است. زمان اجرا: '+(s.ms/1000).toLocaleString('fa-IR',{maximumFractionDigits:1})+' ثانیه.';
+  var ch=chart(s,p);$('chartWrap').hidden=!ch;$('chart').innerHTML=ch;
 
   var bars=$('bars');bars.innerHTML='';
   function row(a,w,f,txt,mk){
